@@ -7,6 +7,7 @@ import platform
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 import calendar
+import argparse
 
 
 load_dotenv()
@@ -151,7 +152,21 @@ async def download_video_async(topic, token, download_url, count_mp3, count_mp4,
         print(topic + "Faild To Download" + str(e))
         pass
 year = 2024
-async def main(token):
-    # await delete_recordings(token, year)
-    await get_recordings(token,year)
-asyncio.run(main(get_token()))
+async def main(token,year):
+    await get_recordings(token, year)
+
+if __name__ == "__main__":
+    load_dotenv()
+
+    parser = argparse.ArgumentParser(description="Zoom Recordings Script")
+    parser.add_argument("year", type=int, help="Specify the year for Zoom recordings")
+
+    args = parser.parse_args()
+
+    ZOOM_ACCOUNT_ID = os.getenv('ZOOM_ACCOUNT_ID')
+    ZOOM_CLIENT_ID = os.getenv('ZOOM_CLIENT_ID')
+    ZOOM_CLIENT_SECRET = os.getenv('ZOOM_CLIENT_SECRET')
+
+    token = get_token()
+
+    asyncio.run(main(token, args.year))
