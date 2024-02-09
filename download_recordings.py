@@ -6,7 +6,7 @@ import asyncio
 import platform
 from concurrent.futures import ThreadPoolExecutor
 
-
+year = 2020
 def get_token():
     ZOOM_ACCOUNT_ID=''
     ZOOM_CLIENT_ID=''
@@ -20,11 +20,10 @@ def get_token():
     print(response.text)
     token = response.json().get('access_token')
     return token
-async def get_recordings(token):
+async def get_recordings(token, year):
     url = "https://api.zoom.us/v2/users/me/recordings"
     headers = {"Authorization": f"Bearer {token}"}
-# Define the year you want to search for recordings
-    year = 2020  # Example year
+# Define the year you want to search for recordings 
 
     for month in range(1, 13):  # Loop through months 1 to 12
         # Calculate the start and end dates for each month
@@ -68,11 +67,10 @@ async def get_recordings(token):
         else:
             print(f"Failed for {start_date} to {end_date} - Status code: {response.status_code}")
 
-async def delete_recordings(token):
+async def delete_recordings(token, year):
     url = "https://api.zoom.us/v2/users/me/recordings"
     headers = {"Authorization": f"Bearer {token}"}
 # Define the year you want to search for recordings
-    year = 2020  # Example year
     async with aiohttp.ClientSession(headers=headers) as session:
         for month in range(1, 13):
             start_date = f"{year}-{month:02d}-01"
@@ -101,7 +99,7 @@ async def delete_recordings(token):
                     print(f"Failed for {start_date} to {end_date} - Status code: {response.status}")
 
 
-async def download_video_async(topic, token, download_url, count_mp3, count_mp4, file_type):
+async def download_video_async(topic, token, download_url, count_mp3, count_mp4, file_type, year):
     try:
         user_agent = f"Mozilla/5.0 (Windows NT {platform.release()}; {platform.machine()}; rv:85.0) Gecko/20100101 Firefox/85.0"
         count=0
@@ -113,11 +111,11 @@ async def download_video_async(topic, token, download_url, count_mp3, count_mp4,
         print(file_type)
         if file_type == 'M4A':
             count = count_mp3
-            directory = 'D:/Archive/Zoom/Audio/2020/'
+            directory = f'D:/Archive/Zoom/Audio/{year}/'
             file_extension = '.mp3'
         elif file_type == 'MP4':
             count = count_mp4
-            directory = 'D:/Archive/Zoom/Video/2020/'
+            directory = 'D:/Archive/Zoom/Video/{year}/'
             file_extension = '.mp4'
         else:
             return None
@@ -146,5 +144,5 @@ async def download_video_async(topic, token, download_url, count_mp3, count_mp4,
         print(topic + "Faild To Download" + str(e))
         pass
 async def main(token):
-    await delete_recordings(token)
+    await delete_recordings(token, year)
 asyncio.run(main(get_token()))
