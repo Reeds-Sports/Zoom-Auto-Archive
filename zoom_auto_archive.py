@@ -204,10 +204,9 @@ async def main(token,year, type):
 def valid_options(string):
     value = int(string)
     inputs = [1,2,3]
-    if value in inputs:
-        continue
-    else:
+    if not value in inputs:
         raise parser.ArgumentError("Value has to be one of the following: 1 2 3")
+        
 if __name__ == "__main__":
     load_dotenv()
 
