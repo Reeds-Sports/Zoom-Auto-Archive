@@ -108,7 +108,7 @@ async def get_recordings(token, year):
                     print(f"Meeting ID: {meeting['id']} - Download URL: {download_url}")
                     file_type = file.get('file_type')
                     topic = meeting.get('topic')
-                    print(f"Topic: {topic} Download Url: {download_url} File Type:{file_type}")
+                    return f"Topic: {topic} Download Url: {download_url} File Type:{file_type}"
 
                 
         else:
@@ -120,11 +120,11 @@ async def delete_recordings(token, year):
 # Define the year you want to search for recordings
     async with aiohttp.ClientSession(headers=headers) as session:
         for month in range(1, 13):
-            start_date = f"{year}-{month:02d}-01"
-            next_month = month % 12 + 1 if month != 12 else 1
+            # Determine the last day of the month
             last_day = calendar.monthrange(year, month)[1]
-
-            end_date = f"{year}-{next_month:02d}-{last_day}"
+            # Construct the start and end dates
+            start_date = f"{year}-{month:02d}-01"
+            end_date = f"{year}-{month:02d}-{last_day}"
 
             params = {
                 "from": start_date,
@@ -136,7 +136,6 @@ async def delete_recordings(token, year):
                     print(f"Recordings for {start_date} to {end_date}:")
                     
                     for meeting in recordings_data.get('meetings', []):
-                        print(meeting)
                         encoded_uuid = meeting.get('uuid')
                         delete_url = f"https://api.zoom.us/v2/meetings/{encoded_uuid}/recordings"
                         async with session.delete(delete_url) as delete_response:
@@ -193,19 +192,22 @@ async def download_video_async(topic, token, download_url, count_mp3, count_mp4,
         print(topic + "Faild To Download" + str(e))
         pass
 year = 2024
-async def main(token,year, type):
+async def main(token,year,type):
+    print(type)
     if type == 1:
         await get_recordings(token, year)
     if type == 2:
-        await delete_recordings(token, year)
-    if type == 3:
         await get_recordings_download(token, year)
+    if type == 3:
+        await delete_recordings(token, year)
         
 def valid_options(string):
     value = int(string)
     inputs = [1,2,3]
     if not value in inputs:
         raise parser.ArgumentError("Value has to be one of the following: 1 2 3")
+    else:
+        return value
         
 if __name__ == "__main__":
     load_dotenv()
@@ -216,8 +218,9 @@ if __name__ == "__main__":
     Specify the mode that you would like to use.
     Options:
     1 Get Records
-    2 Delete Records
-    3 Download Records
+    2 Download Records
+    3 Delete Records
+
     """)
 
     args = parser.parse_args()
