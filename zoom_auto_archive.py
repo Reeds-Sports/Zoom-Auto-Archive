@@ -207,7 +207,7 @@ def valid_options(string):
     if value in inputs:
         continue
     else:
-        raise parser.ArgumentError("Value has to be one of the following: 1 2 3)
+        raise parser.ArgumentError("Value has to be one of the following: 1 2 3")
 if __name__ == "__main__":
     load_dotenv()
 
