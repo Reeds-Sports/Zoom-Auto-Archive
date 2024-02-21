@@ -25,7 +25,7 @@ def get_token():
     print(response.text)
     token = response.json().get('access_token')
     return token
-async def get_recordings(token, year):
+async def get_recordings_download(token, year):
     url = "https://api.zoom.us/v2/users/me/recordings"
     headers = {"Authorization": f"Bearer {token}"}
 # Define the year you want to search for recordings 
@@ -68,6 +68,47 @@ async def get_recordings(token, year):
                         count_mp4 += 1
                 # Run all download tasks asynchronously
                 await asyncio.gather(*tasks)
+
+                
+        else:
+            print(f"Failed for {start_date} to {end_date} - Status code: {response.status_code}")
+async def get_recordings(token, year):
+    url = "https://api.zoom.us/v2/users/me/recordings"
+    headers = {"Authorization": f"Bearer {token}"}
+# Define the year you want to search for recordings 
+
+    for month in range(1, 13):
+        # Determine the last day of the month
+        last_day = calendar.monthrange(year, month)[1]
+        # Construct the start and end dates
+        start_date = f"{year}-{month:02d}-01"
+        end_date = f"{year}-{month:02d}-{last_day}"
+
+        # Make the API request for each month's recordings
+        params = {
+            "from": start_date,
+            "to": end_date
+        }
+        response = requests.get(url, headers=headers, params=params)
+        
+        if response.status_code == 200:
+            recordings_data = response.json()
+            print(f"Recordings for {start_date} to {end_date}:")
+            
+            for meeting in recordings_data.get('meetings', []):
+                print(meeting)
+                recording_files = meeting.get('recording_files', [])
+                count_mp3 = 1
+                count_mp4 = 1
+                tasks = []  # List to hold asynchronous download tasks
+
+                for file in recording_files:
+                    
+                    download_url = file.get('download_url', 'N/A')
+                    print(f"Meeting ID: {meeting['id']} - Download URL: {download_url}")
+                    file_type = file.get('file_type')
+                    topic = meeting.get('topic')
+                    print(f"Topic: {topic} Download Url: {download_url} File Type:{file_type}")
 
                 
         else:
@@ -152,14 +193,33 @@ async def download_video_async(topic, token, download_url, count_mp3, count_mp4,
         print(topic + "Faild To Download" + str(e))
         pass
 year = 2024
-async def main(token,year):
-    await get_recordings(token, year)
-
+async def main(token,year, type):
+    if type == 1:
+        await get_recordings(token, year)
+    if type == 2:
+        await delete_recordings(token, year)
+    if type == 3:
+        await get_recordings_download(token, year)
+        
+def valid_options(string):
+    value = int(string)
+    inputs = [1,2,3]
+    if value in inputs:
+        continue
+    else:
+        raise parser.ArgumentError("Value has to be one of the following: 1 2 3)
 if __name__ == "__main__":
     load_dotenv()
 
     parser = argparse.ArgumentParser(description="Zoom Recordings Script")
     parser.add_argument("year", type=int, help="Specify the year for Zoom recordings")
+    parser.add_argument("type",type=valid_options, help="""
+    Specify the mode that you would like to use.
+    Options:
+    1 Get Records
+    2 Delete Records
+    3 Download Records
+    """)
 
     args = parser.parse_args()
 
@@ -169,4 +229,4 @@ if __name__ == "__main__":
 
     token = get_token()
 
-    asyncio.run(main(token, args.year))
+    asyncio.run(main(token, args.year,args.type))
